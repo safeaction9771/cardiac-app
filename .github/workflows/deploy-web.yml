@@ -1,10 +1,13 @@
 # main에 올리면 웹 버전을 GitHub Pages에 배포합니다.
-# AED 인증키는 넣지 않습니다. 웹에 넣으면 누구나 볼 수 있고, AED API가 브라우저 직접 호출(CORS)을 막아서 어차피 동작하지 않습니다.
+# AED 인증키는 웹 앱에 넣지 않습니다. 대신 전국 AED 목록을 public/aed/ 정적 파일로 만들어 함께 배포합니다.
+# 저장소 Secret AED_SERVICE_KEY가 있으면 배포할 때(매주 월요일 포함) 목록을 새로 받고, 없으면 저장소에 있는 목록을 씁니다.
 name: Deploy web
 
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '0 18 * * 0' # 매주 월요일 03:00 (한국 시간)
   workflow_dispatch:
 
 permissions:
@@ -26,6 +29,15 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Refresh AED list
+        env:
+          AED_SERVICE_KEY: ${{ secrets.AED_SERVICE_KEY }}
+        run: |
+          if [ -n "$AED_SERVICE_KEY" ]; then
+            node scripts/build-aed-data.mjs || (git checkout -- public/aed && echo "AED 목록 갱신 실패, 기존 목록 사용")
+          else
+            echo "AED_SERVICE_KEY 없음, 저장소의 AED 목록 사용"
+          fi
       - run: npx expo export --platform web
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3

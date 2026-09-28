@@ -17,7 +17,8 @@ export function NearbyAed() {
         setState({ kind: 'error', message: '위치 권한이 없어 주변 AED를 찾을 수 없습니다. 설정에서 위치 권한을 허용해 주세요.' });
         return;
       }
-      const pos = (await Location.getLastKnownPositionAsync({ maxAge: 60000 })) ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
+      const last = await Location.getLastKnownPositionAsync({ maxAge: 60000 }).catch(() => null);
+      const pos = last ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
       const items = await fetchNearbyAeds(pos.coords.latitude, pos.coords.longitude);
       setState({ kind: 'done', items });
     } catch (e) {

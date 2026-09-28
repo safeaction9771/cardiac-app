@@ -22,4 +22,6 @@ npx expo start --web  # 브라우저에서 보기
 ## 내 주변 AED 찾기
 공공데이터포털 "국립중앙의료원_전국 자동심장충격기(AED) 정보 조회 서비스" 인증키가 필요합니다.
 `.env.example`을 `.env.local`로 복사하고 `EXPO_PUBLIC_AED_SERVICE_KEY`에 키를 넣으세요. `.env.local`은 git에 올라가지 않습니다.
+웹 버전과 키 없이 만든 앱은 `public/aed/`의 전국 AED 목록(0.1도 격자별 JSON)에서 가까운 곳을 찾습니다.
+목록 갱신: `node --env-file=.env.local scripts/build-aed-data.mjs`. GitHub 저장소 Secret `AED_SERVICE_KEY`를 넣어두면 배포 때와 매주 월요일에 자동으로 갱신됩니다.
 주의: `EXPO_PUBLIC_` 값은 앱 안에 포함되므로, 앱을 배포하면 키를 추출할 수 있습니다. 정식 출시 전에는 서버를 거쳐 호출하도록 바꾸는 것이 좋습니다.
