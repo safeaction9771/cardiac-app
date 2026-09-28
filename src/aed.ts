@@ -55,7 +55,8 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
 function groupByBuilding(list: Aed[], count: number) {
   const groups = new Map<string, Aed>();
   for (const aed of list) {
-    const key = `${aed.place}|${aed.address}`;
+    // 같은 건물인데 주소 띄어쓰기만 다른 경우가 있어 공백을 무시하고 묶습니다.
+    const key = `${aed.place}|${aed.address}`.replace(/\s+/g, '');
     const prev = groups.get(key);
     if (prev) prev.count += 1;
     else groups.set(key, { ...aed });
