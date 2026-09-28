@@ -1,3 +1,4 @@
+import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useEffect, useRef, useState } from 'react';
@@ -7,13 +8,19 @@ import { colors } from '../theme';
 const BPM = 110; // middle of the 100–120/min guideline range
 const INTERVAL = 60000 / BPM;
 
-// Chest-compression pacer: a pulsing circle and a vibration on every beat, counting 1–30.
+// Chest-compression pacer: a pulsing circle, a click and a vibration on every beat, counting 1–30.
 export function CprCoach() {
   const [running, setRunning] = useState(false);
   const [count, setCount] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const scale = useRef(new Animated.Value(1)).current;
   const startedAt = useRef(0);
+  const click = useAudioPlayer(require('../../assets/beat.wav'));
+
+  useEffect(() => {
+    // Play even with the iPhone silent switch on, and don't stop other audio (e.g. a 119 call on speaker).
+    setAudioModeAsync({ playsInSilentMode: true, interruptionMode: 'mixWithOthers' }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!running) return;
@@ -22,6 +29,8 @@ export function CprCoach() {
     const beat = setInterval(() => {
       setCount((c) => (c % 30) + 1);
       setElapsed(Math.floor((Date.now() - startedAt.current) / 1000));
+      click.seekTo(0).catch(() => {});
+      click.play();
       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
       scale.setValue(0.82);
       Animated.timing(scale, { toValue: 1, duration: INTERVAL * 0.8, useNativeDriver: Platform.OS !== 'web' }).start();
@@ -30,7 +39,7 @@ export function CprCoach() {
       clearInterval(beat);
       deactivateKeepAwake('cpr').catch(() => {});
     };
-  }, [running, scale]);
+  }, [running, scale, click]);
 
   const toggle = () => {
     if (!running) {
@@ -63,7 +72,7 @@ export function CprCoach() {
       <Text style={styles.caption}>
         {running
           ? `${mm}:${ss} 경과 · 원이 줄어들 때마다 세게 누르세요${elapsed >= 120 ? '\n2분이 지났어요. 도와줄 사람이 있으면 교대하세요.' : ''}`
-          : '누르면 박자에 맞춰 진동하고 화면이 꺼지지 않아요.'}
+          : '누르면 박자에 맞춰 소리와 진동이 나고 화면이 꺼지지 않아요.'}
       </Text>
       {running && (
         <Pressable onPress={toggle} style={styles.stop} accessibilityRole="button">

@@ -31,7 +31,16 @@
         {
           "locationWhenInUsePermission": "가까운 자동심장충격기(AED)를 찾기 위해 현재 위치를 사용합니다."
         }
-      ]
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
+      "expo-asset"
     ]
   }
 }
